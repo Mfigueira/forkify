@@ -11,11 +11,12 @@ export default class View {
     this._parentElement.insertAdjacentHTML('afterbegin', markup);
   }
 
-  render(data) {
+  render(data, render = true) {
     if (!data || (Array.isArray(data) && !data.length))
       return this.renderErrorMessage();
     this._data = data;
     const markup = this._generateMarkup();
+    if (!render) return markup;
     this._clear();
     this._appendMarkup(markup);
   }
@@ -31,7 +32,7 @@ export default class View {
     newElements.forEach((newEl, i) => {
       const curEl = curElements[i];
       if (!newEl.isEqualNode(curEl)) {
-        if (newEl.firstChild.nodeValue.trim() !== '')
+        if (newEl.firstChild?.nodeValue.trim() !== '')
           curEl.textContent = newEl.textContent;
         Array.from(newEl.attributes).forEach(attr =>
           curEl.setAttribute(attr.name, attr.value)

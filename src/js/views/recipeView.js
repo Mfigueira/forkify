@@ -1,5 +1,5 @@
 import { Fraction } from 'fractional';
-import View from './view.js';
+import View from './View.js';
 import icons from 'url:../../img/icons.svg';
 
 class RecipeView extends View {
@@ -56,9 +56,11 @@ class RecipeView extends View {
           </div>
         </div>
 
-        <button class="btn--round">
+        <button class="btn--round btn--bookmark">
           <svg class="">
-            <use href="${icons}#icon-bookmark-fill"></use>
+            <use href="${icons}#icon-bookmark${
+      this._data.bookmarked ? '-fill' : ''
+    }"></use>
           </svg>
         </button>
       </div>
@@ -124,6 +126,14 @@ class RecipeView extends View {
       if (!btn) return;
       const newServings = Number(btn.dataset.updateto);
       if (newServings > 0) handler(newServings);
+    });
+  }
+
+  addHandlerBookmark(handler) {
+    this._parentElement.addEventListener('click', e => {
+      const btn = e.target.closest('.btn--bookmark');
+      if (!btn) return;
+      handler();
     });
   }
 }
