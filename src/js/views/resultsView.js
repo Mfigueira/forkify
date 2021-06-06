@@ -7,10 +7,16 @@ class ResultsView extends View {
 
   _generateMarkup() {
     return this._data
-      .map(
-        res =>
-          `<li class="preview">
-            <a class="preview__link" href="#${res.id}">
+      .map(res => {
+        const id = window.location.hash.slice(1);
+        return `
+          <li class="preview">
+            <a
+              class="preview__link ${
+                res.id === id ? 'preview__link--active' : ''
+              }"
+              href="#${res.id}"
+            >
               <figure class="preview__fig">
                 <img src="${res.image_url}" alt="${res.title}" />
               </figure>
@@ -19,8 +25,9 @@ class ResultsView extends View {
                 <p class="preview__publisher">${res.publisher}</p>
               </div>
             </a>
-          </li>`
-      )
+          </li>
+        `;
+      })
       .join('');
   }
 }

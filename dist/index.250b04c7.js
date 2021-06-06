@@ -463,6 +463,7 @@ const controlRecipes = async () => {
     const id = window.location.hash.slice(1);
     if (!id) return;
     _viewsRecipeViewJsDefault.default.renderSpinner();
+    _viewsResultsViewJsDefault.default.update(_modelJs.getSearchResultsPage());
     await _modelJs.loadRecipe(id);
     _viewsRecipeViewJsDefault.default.render(_modelJs.state.recipe);
   } catch (err) {
@@ -13157,7 +13158,6 @@ class View {
     this._appendMarkup(markup);
   }
   update(data) {
-    if (!data || Array.isArray(data) && !data.length) return this.renderErrorMessage();
     this._data = data;
     const newMarkup = this._generateMarkup();
     const newDOM = document.createRange().createContextualFragment(newMarkup);
@@ -13246,8 +13246,14 @@ class ResultsView extends _viewJsDefault.default {
   _errorMessage = 'No recipies found. Please search again :)';
   _successMessage = '';
   _generateMarkup() {
-    return this._data.map(res => `<li class="preview">
-            <a class="preview__link" href="#${res.id}">
+    return this._data.map(res => {
+      const id = window.location.hash.slice(1);
+      return `
+          <li class="preview">
+            <a
+              class="preview__link ${res.id === id ? 'preview__link--active' : ''}"
+              href="#${res.id}"
+            >
               <figure class="preview__fig">
                 <img src="${res.image_url}" alt="${res.title}" />
               </figure>
@@ -13256,7 +13262,9 @@ class ResultsView extends _viewJsDefault.default {
                 <p class="preview__publisher">${res.publisher}</p>
               </div>
             </a>
-          </li>`).join('');
+          </li>
+        `;
+    }).join('');
   }
 }
 exports.default = new ResultsView();
