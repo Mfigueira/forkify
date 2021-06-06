@@ -1,17 +1,13 @@
-# Money IO
+# Forkify
 
 ## What is this?
 
-This is a project I made to apply modern JS (ES6+) concepts.
+This is the final project I developed for "The Complete JavaScript Course 2021: From Zero to Expert!" by Jonas Schmedtmann.
 
-It was based on the lectures of "The Complete JavaScript Course 2021: From Zero to Expert!" by Jonas Schmedtmann
+It's an application to search for yummi recipies! 😋
 
-## Is it hosted somewhere?
+Built with modern JS (ES6+): Functional (Declarative) Programming, Node Package Manager (NPM), Promises with async/await, and more.
 
-Yup! It's uploaded on GH Pages [here](https://mfigueira.github.io/money-io/).
+## Can I see it?
 
-Test data:
-
-- user: ab, PIN: 1111
-- user: jd, PIN: 2222
-- user: jp, PIN: 3333
+Yes! It's uploaded [here](https://mfigueira.github.io/forkify/).
