@@ -23,7 +23,7 @@ class RecipeView extends View {
             <use href="${icons}#icon-clock"></use>
           </svg>
           <span class="recipe__info-data recipe__info-data--minutes">
-          ${this._data.cooking_time}
+            ${this._data.cooking_time}
           </span>
           <span class="recipe__info-text">minutes</span>
         </div>
@@ -32,17 +32,23 @@ class RecipeView extends View {
             <use href="${icons}#icon-users"></use>
           </svg>
           <span class="recipe__info-data recipe__info-data--people">
-          ${this._data.servings}
+            ${this._data.servings}
           </span>
           <span class="recipe__info-text">servings</span>
 
           <div class="recipe__info-buttons">
-            <button class="btn--tiny btn--increase-servings">
+            <button
+              class="btn--tiny btn--update-servings"
+              data-updateto="${this._data.servings - 1}"
+            >
               <svg>
                 <use href="${icons}#icon-minus-circle"></use>
               </svg>
             </button>
-            <button class="btn--tiny btn--increase-servings">
+            <button
+              class="btn--tiny btn--update-servings"
+              data-updateto="${this._data.servings + 1}"
+            >
               <svg>
                 <use href="${icons}#icon-plus-circle"></use>
               </svg>
@@ -89,7 +95,7 @@ class RecipeView extends View {
         <p class="recipe__directions-text">
           This recipe was carefully designed and tested by
           <span class="recipe__publisher">
-          ${this._data.publisher}
+            ${this._data.publisher}
           </span>. Please check out
           directions at their website.
         </p>
@@ -103,12 +109,22 @@ class RecipeView extends View {
             <use href="${icons}#icon-arrow-right"></use>
           </svg>
         </a>
-      </div>`;
+      </div>
+    `;
   }
 
   // Publisher(subscriber) - Design Pattern
   addHandlerRender(handler) {
     ['load', 'hashchange'].forEach(ev => window.addEventListener(ev, handler));
+  }
+
+  addHandlerUpdateServings(handler) {
+    this._parentElement.addEventListener('click', e => {
+      const btn = e.target.closest('.btn--update-servings');
+      if (!btn) return;
+      const newServings = Number(btn.dataset.updateto);
+      if (newServings > 0) handler(newServings);
+    });
   }
 }
 

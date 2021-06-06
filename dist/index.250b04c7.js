@@ -486,8 +486,13 @@ const controlPagination = goToPage => {
   _viewsResultsViewJsDefault.default.render(_modelJs.getSearchResultsPage(goToPage));
   _viewsPaginationViewJsDefault.default.render(_modelJs.state.search);
 };
+const controlServings = newServings => {
+  _modelJs.updateServings(newServings);
+  _viewsRecipeViewJsDefault.default.update(_modelJs.state.recipe);
+};
 const init = () => {
   _viewsRecipeViewJsDefault.default.addHandlerRender(controlRecipes);
+  _viewsRecipeViewJsDefault.default.addHandlerUpdateServings(controlServings);
   _viewsSearchViewJsDefault.default.addHandlerSearch(controlSearchResults);
   _viewsPaginationViewJsDefault.default.addHandlerClick(controlPagination);
 };
@@ -12512,6 +12517,9 @@ _parcelHelpers.export(exports, "loadSearchResults", function () {
 _parcelHelpers.export(exports, "getSearchResultsPage", function () {
   return getSearchResultsPage;
 });
+_parcelHelpers.export(exports, "updateServings", function () {
+  return updateServings;
+});
 var _configJs = require('./config.js');
 var _helpersJs = require('./helpers.js');
 const state = {
@@ -12545,6 +12553,12 @@ const getSearchResultsPage = (page = state.search.page) => {
   const start = (page - 1) * state.search.resultsPerPage;
   const end = page * state.search.resultsPerPage;
   return state.search.results.slice(start, end);
+};
+const updateServings = newServings => {
+  state.recipe.ingredients.forEach(ing => {
+    ing.quantity = ing.quantity * newServings / state.recipe.servings;
+  });
+  state.recipe.servings = newServings;
 };
 
 },{"@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y","./config.js":"6pr2F","./helpers.js":"581KF"}],"6pr2F":[function(require,module,exports) {
@@ -12610,7 +12624,7 @@ class RecipeView extends _viewJsDefault.default {
             <use href="${_urlImgIconsSvgDefault.default}#icon-clock"></use>
           </svg>
           <span class="recipe__info-data recipe__info-data--minutes">
-          ${this._data.cooking_time}
+            ${this._data.cooking_time}
           </span>
           <span class="recipe__info-text">minutes</span>
         </div>
@@ -12619,17 +12633,23 @@ class RecipeView extends _viewJsDefault.default {
             <use href="${_urlImgIconsSvgDefault.default}#icon-users"></use>
           </svg>
           <span class="recipe__info-data recipe__info-data--people">
-          ${this._data.servings}
+            ${this._data.servings}
           </span>
           <span class="recipe__info-text">servings</span>
 
           <div class="recipe__info-buttons">
-            <button class="btn--tiny btn--increase-servings">
+            <button
+              class="btn--tiny btn--update-servings"
+              data-updateto="${this._data.servings - 1}"
+            >
               <svg>
                 <use href="${_urlImgIconsSvgDefault.default}#icon-minus-circle"></use>
               </svg>
             </button>
-            <button class="btn--tiny btn--increase-servings">
+            <button
+              class="btn--tiny btn--update-servings"
+              data-updateto="${this._data.servings + 1}"
+            >
               <svg>
                 <use href="${_urlImgIconsSvgDefault.default}#icon-plus-circle"></use>
               </svg>
@@ -12667,7 +12687,7 @@ class RecipeView extends _viewJsDefault.default {
         <p class="recipe__directions-text">
           This recipe was carefully designed and tested by
           <span class="recipe__publisher">
-          ${this._data.publisher}
+            ${this._data.publisher}
           </span>. Please check out
           directions at their website.
         </p>
@@ -12681,11 +12701,20 @@ class RecipeView extends _viewJsDefault.default {
             <use href="${_urlImgIconsSvgDefault.default}#icon-arrow-right"></use>
           </svg>
         </a>
-      </div>`;
+      </div>
+    `;
   }
   /*Publisher(subscriber) - Design Pattern*/
   addHandlerRender(handler) {
     ['load', 'hashchange'].forEach(ev => window.addEventListener(ev, handler));
+  }
+  addHandlerUpdateServings(handler) {
+    this._parentElement.addEventListener('click', e => {
+      const btn = e.target.closest('.btn--update-servings');
+      if (!btn) return;
+      const newServings = Number(btn.dataset.updateto);
+      if (newServings > 0) handler(newServings);
+    });
   }
 }
 exports.default = new RecipeView();
@@ -13127,13 +13156,29 @@ class View {
     this._clear();
     this._appendMarkup(markup);
   }
+  update(data) {
+    if (!data || Array.isArray(data) && !data.length) return this.renderErrorMessage();
+    this._data = data;
+    const newMarkup = this._generateMarkup();
+    const newDOM = document.createRange().createContextualFragment(newMarkup);
+    const newElements = Array.from(newDOM.querySelectorAll('*'));
+    const curElements = Array.from(this._parentElement.querySelectorAll('*'));
+    newElements.forEach((newEl, i) => {
+      const curEl = curElements[i];
+      if (!newEl.isEqualNode(curEl)) {
+        if (newEl.firstChild.nodeValue.trim() !== '') curEl.textContent = newEl.textContent;
+        Array.from(newEl.attributes).forEach(attr => curEl.setAttribute(attr.name, attr.value));
+      }
+    });
+  }
   renderSpinner() {
     const markup = `
       <div class="spinner">
         <svg>
           <use href="${_urlImgIconsSvgDefault.default}#icon-loader"></use>
         </svg>
-      </div>`;
+      </div>
+    `;
     this._clear();
     this._appendMarkup(markup);
   }
@@ -13146,7 +13191,8 @@ class View {
           </svg>
         </div>
         <p>${message}</p>
-      </div>`;
+      </div>
+    `;
     this._clear();
     this._appendMarkup(markup);
   }
@@ -13159,7 +13205,8 @@ class View {
           </svg>
         </div>
         <p>${message}</p>
-      </div>`;
+      </div>
+    `;
     this._clear();
     this._appendMarkup(markup);
   }
