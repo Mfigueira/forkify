@@ -3,72 +3,90 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
 // App imports
+import { MODAL_CLOSE_SEC } from './config.js';
 import * as model from './model.js';
-import recipeView from './views/RecipeView.js';
-import searchView from './views/SearchView.js';
-import resultsView from './views/ResultsView.js';
-import paginationView from './views/PaginationView.js';
-import bookmarksView from './views/BookmarksView.js';
-
-// Parcel hot module replacement
-if (module.hot) module.hot.accept();
+import RecipeView from './views/RecipeView.js';
+import SearchView from './views/SearchView.js';
+import ResultsView from './views/ResultsView.js';
+import PaginationView from './views/PaginationView.js';
+import BookmarksView from './views/BookmarksView.js';
+import AddRecipeView from './views/AddRecipeView.js';
 
 const controlRecipes = async () => {
   try {
     const id = window.location.hash.slice(1);
     if (!id) return;
-    recipeView.renderSpinner();
-    resultsView.update(model.getSearchResultsPage());
-    bookmarksView.update(model.state.bookmarks);
+    RecipeView.renderSpinner();
+    ResultsView.update(model.getSearchResultsPage());
+    BookmarksView.update(model.state.bookmarks);
     await model.loadRecipe(id);
-    recipeView.render(model.state.recipe);
+    RecipeView.render(model.state.recipe);
   } catch (err) {
-    recipeView.renderErrorMessage();
+    RecipeView.renderErrorMessage();
     console.error(`${err} 💥💥💥`);
   }
 };
 
 const controlSearchResults = async () => {
   try {
-    const query = searchView.getQuery();
+    const query = SearchView.getQuery();
     if (!query) return;
-    resultsView.renderSpinner();
+    ResultsView.renderSpinner();
     await model.loadSearchResults(query);
-    resultsView.render(model.getSearchResultsPage());
-    paginationView.render(model.state.search);
+    ResultsView.render(model.getSearchResultsPage());
+    PaginationView.render(model.state.search);
   } catch (err) {
-    console.error(err);
+    console.error(`${err} 💥💥💥`);
   }
 };
 
 const controlPagination = goToPage => {
-  resultsView.render(model.getSearchResultsPage(goToPage));
-  paginationView.render(model.state.search);
+  ResultsView.render(model.getSearchResultsPage(goToPage));
+  PaginationView.render(model.state.search);
 };
 
 const controlServings = newServings => {
   model.updateServings(newServings);
-  recipeView.update(model.state.recipe);
+  RecipeView.update(model.state.recipe);
 };
 
 const controlAddBookmark = () => {
   model.state.recipe.bookmarked
     ? model.deleteBookmark(model.state.recipe.id)
     : model.addBookmark(model.state.recipe);
-  recipeView.update(model.state.recipe);
-  bookmarksView.render(model.state.bookmarks);
+  RecipeView.update(model.state.recipe);
+  BookmarksView.render(model.state.bookmarks);
 };
 
 const controlRenderBookmarks = () => {
-  bookmarksView.render(model.state.bookmarks);
+  BookmarksView.render(model.state.bookmarks);
+};
+
+const controlAddRecipe = async newRecipe => {
+  try {
+    AddRecipeView.renderSpinner();
+    await model.uploadRecipe(newRecipe);
+    RecipeView.render(model.state.recipe);
+    AddRecipeView.renderSuccessMessage();
+    BookmarksView.render(model.state.bookmarks);
+    window.history.pushState(null, '', `#${model.state.recipe.id}`);
+    setTimeout(() => {
+      AddRecipeView.toggleModal();
+    }, MODAL_CLOSE_SEC * 1000);
+  } catch (err) {
+    console.error(`${err} 💥💥💥`);
+    AddRecipeView.renderErrorMessage(err.message);
+  }
 };
 
 const init = () => {
-  bookmarksView.addHandlerRender(controlRenderBookmarks);
-  recipeView.addHandlerRender(controlRecipes);
-  recipeView.addHandlerUpdateServings(controlServings);
-  recipeView.addHandlerBookmark(controlAddBookmark);
-  searchView.addHandlerSearch(controlSearchResults);
-  paginationView.addHandlerClick(controlPagination);
+  AddRecipeView.addHandlerToggleModal();
+  AddRecipeView.addHandlerUploadRecipe(controlAddRecipe);
+  BookmarksView.addHandlerRender(controlRenderBookmarks);
+  RecipeView.addHandlerRender(controlRecipes);
+  RecipeView.addHandlerUpdateServings(controlServings);
+  RecipeView.addHandlerBookmark(controlAddBookmark);
+  SearchView.addHandlerSearch(controlSearchResults);
+  PaginationView.addHandlerClick(controlPagination);
 };
 init();

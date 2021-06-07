@@ -5,7 +5,6 @@ import icons from 'url:../../img/icons.svg';
 class RecipeView extends View {
   _parentElement = document.querySelector('.recipe');
   _errorMessage = 'We could not find that recipe. Please try another one!';
-  _successMessage = '';
 
   _generateMarkup() {
     return `
@@ -56,6 +55,11 @@ class RecipeView extends View {
           </div>
         </div>
 
+        <div class="recipe__user-generated ${this._data.key ? '' : 'hidden'}">
+          <svg>
+            <use href="${icons}#icon-user"></use>
+          </svg>
+        </div>
         <button class="btn--round btn--bookmark">
           <svg class="">
             <use href="${icons}#icon-bookmark${

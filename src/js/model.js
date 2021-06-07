@@ -1,5 +1,5 @@
-import { API_URL, RES_PER_PAGE } from './config.js';
-import { getJSON } from './helpers.js';
+import { API_URL, RES_PER_PAGE, API_KEY } from './config.js';
+import { AJAX } from './helpers.js';
 
 export const state = {
   recipe: {},
@@ -16,7 +16,7 @@ export const loadRecipe = async id => {
   try {
     const {
       data: { recipe },
-    } = await getJSON(`${API_URL}${id}`);
+    } = await AJAX(`${API_URL}${id}?key=${API_KEY}`);
     state.recipe = recipe;
 
     state.recipe.bookmarked = state.bookmarks.some(book => book.id === id)
@@ -32,8 +32,11 @@ export const loadSearchResults = async query => {
     state.search.query = query;
     const {
       data: { recipes },
-    } = await getJSON(`${API_URL}?search=${query}`);
-    state.search.results = recipes;
+    } = await AJAX(`${API_URL}?search=${query}&key=${API_KEY}`);
+    state.search.results = recipes.map(rec => ({
+      ...rec,
+      ...(rec.key && { key: rec.key }),
+    }));
     state.search.page = 1;
   } catch (err) {
     throw err;
@@ -72,7 +75,39 @@ export const deleteBookmark = id => {
 
 const init = () => {
   const bookmarks = localStorage.getItem('bookmarks');
-  console.log(bookmarks);
   if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
 };
 init();
+
+export const uploadRecipe = async newRecipe => {
+  try {
+    const ingredients = Object.entries(newRecipe)
+      .filter(entry => entry[0].startsWith('ingredient') && entry[1] !== '')
+      .map(ing => {
+        const ingArr = ing[1].split(',').map(el => el.trim());
+        if (ingArr.length !== 3)
+          throw new Error(
+            'Wrong ingredient fromat! Please use the correct format :)'
+          );
+        const [quantity, unit, description] = ingArr;
+        return {
+          quantity: quantity ? Number(quantity) : null,
+          unit,
+          description,
+        };
+      });
+    const recipe = {
+      ...newRecipe,
+      ingredients,
+    };
+    const { data } = await AJAX(`${API_URL}?key=${API_KEY}`, recipe);
+    const stateRecipe = {
+      ...data.recipe,
+      ...(recipe.key && { key: recipe.key }),
+    };
+    state.recipe = stateRecipe;
+    addBookmark(state.recipe);
+  } catch (err) {
+    throw err;
+  }
+};
